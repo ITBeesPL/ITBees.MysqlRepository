@@ -26,7 +26,7 @@ namespace ITBees.MysqlRepository
             builderOptions.EnableSensitiveDataLogging(true);
             return (TContext)Activator.CreateInstance(
                 typeof(TContext),
-                BindingFlags.Instance | BindingFlags.NonPublic,
+                BindingFlags.Instance | BindingFlags.Public,
                 null,
                 new object[] { builderOptions.Options },
                 null);
