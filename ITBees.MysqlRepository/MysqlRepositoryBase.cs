@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using ITBees.MysqlRepository;
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure.Internal;
 
-namespace ITBees.Repository
+namespace ITBees.MysqlRepository
 {
     public class MysqlRepositoryBase<T, TContext> where T : class where TContext : DbContext, new()
     {

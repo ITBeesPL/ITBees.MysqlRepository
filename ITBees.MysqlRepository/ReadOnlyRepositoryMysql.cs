@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using ITBees.MysqlRepository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace ITBees.Repository
+namespace ITBees.MysqlRepository
 {
     
     public class ReadOnlyRepositoryMysql<T, TContext> : MysqlRepositoryBase<T, TContext>, IReadOnlyRepository<T, DbContext> where T : class where TContext : DbContext, new()

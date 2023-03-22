@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using ITBees.MysqlRepository.Interfaces;
-using ITBees.Repository;
 using Microsoft.EntityFrameworkCore;
 
 namespace ITBees.MysqlRepository
