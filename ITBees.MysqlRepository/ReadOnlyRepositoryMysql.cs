@@ -33,6 +33,22 @@ namespace ITBees.MysqlRepository
             return AllIncluding(includeProperties).Where(predicate).ToList();
         }
 
+        public PaginatedResult<T> GetDataPaginated(Expression<Func<T, bool>> predicate, int page, int elementsPerPage,
+            params Expression<Func<T, object>>[] includeProperties)
+        {
+            var query = AllIncluding(includeProperties).Where(predicate);
+            var allElementsCount = query.Count();
+            var data = query.Skip((page - 1) * elementsPerPage).Take(elementsPerPage).ToList();
+
+            return new PaginatedResult<T>()
+            {
+                AllElementsCount = allElementsCount,
+                CurrentPage = page,
+                ElementsPerPage = elementsPerPage,
+                Data = data
+            };
+        }
+
         public int GetDataCount(Expression<Func<T, bool>> predicate)
         {
             var query = Context.Set<T>().Count(predicate);
