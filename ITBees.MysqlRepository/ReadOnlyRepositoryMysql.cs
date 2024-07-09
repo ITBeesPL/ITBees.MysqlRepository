@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using ITBees.Interfaces.Repository;
 using ITBees.MysqlRepository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace ITBees.MysqlRepository
 {
-    
+
     public class ReadOnlyRepositoryMysql<T, TContext> : MysqlRepositoryBase<T, TContext>, IReadOnlyRepository<T, DbContext> where T : class where TContext : DbContext, new()
     {
         public ReadOnlyRepositoryMysql(DbContextOptions<TContext> options) : base(options)
@@ -33,10 +34,15 @@ namespace ITBees.MysqlRepository
             return AllIncluding(includeProperties).Where(predicate).ToList();
         }
 
-        public PaginatedResult<T> GetDataPaginated(Expression<Func<T, bool>> predicate, int page, int elementsPerPage,
+        public PaginatedResult<T> GetDataPaginated(Expression<Func<T, bool>> predicate,
+            int page,
+            int elementsPerPage,
+            string sortColumn,
+            SortOrder sortOrder,
             params Expression<Func<T, object>>[] includeProperties)
         {
             var query = AllIncluding(includeProperties).Where(predicate);
+            query = ApplySorting(query, sortColumn, sortOrder);
             var allElementsCount = query.Count();
             var data = query.Skip((page - 1) * elementsPerPage).Take(elementsPerPage).ToList();
 
@@ -47,6 +53,37 @@ namespace ITBees.MysqlRepository
                 ElementsPerPage = elementsPerPage,
                 Data = data
             };
+        }
+
+        private IQueryable<T> ApplySorting(IQueryable<T> query,
+            string sortColumn, SortOrder sortOrder)
+        {
+            if (string.IsNullOrWhiteSpace(sortColumn))
+            {
+                return query;
+            }
+
+            var parameter = Expression.Parameter(typeof(T), "x");
+            var property = typeof(T).GetProperty(sortColumn);
+            if (property == null)
+            {
+                throw new ArgumentException($"Property '{sortColumn}' not found on type '{typeof(T).Name}'");
+            }
+
+            var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+            var orderByExpression = Expression.Lambda(propertyAccess, parameter);
+
+            string orderMethod = sortOrder == SortOrder.Descending ? "OrderByDescending" : "OrderBy";
+
+            MethodCallExpression resultExpression = Expression.Call(
+                typeof(Queryable),
+                orderMethod,
+                new Type[] { typeof(T), property.PropertyType },
+                query.Expression,
+                Expression.Quote(orderByExpression)
+            );
+
+            return query.Provider.CreateQuery<T>(resultExpression);
         }
 
         public int GetDataCount(Expression<Func<T, bool>> predicate)
