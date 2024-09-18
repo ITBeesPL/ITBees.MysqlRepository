@@ -19,10 +19,16 @@ namespace ITBees.MysqlRepository
         protected IQueryable<T> InternalGetData(Expression<Func<T, bool>> predicate,
             params Expression<Func<T, object>>[] includeProperties)
         {
-            IQueryable<T> query = Context.Set<T>().Where(predicate);
+            IQueryable<T> query = Context.Set<T>();
+
             foreach (var includeProperty in includeProperties)
             {
                 query = query.Include(includeProperty);
+            }
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
             }
 
             return query;
