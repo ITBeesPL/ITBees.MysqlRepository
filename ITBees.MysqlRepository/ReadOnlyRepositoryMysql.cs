@@ -55,6 +55,11 @@ namespace ITBees.MysqlRepository
             };
         }
 
+        public PaginatedResult<T> GetDataPaginated(Expression<Func<T, bool>> predicate, SortOptions sortOptions, params Expression<Func<T, object>>[] includeProperties)
+        {
+            return GetDataPaginated(predicate, sortOptions.Page, sortOptions.ElementsPerPage, sortOptions.SortColumn, sortOptions.SortOrder, includeProperties);
+        }
+
         private IQueryable<T> ApplySorting(IQueryable<T> query,
             string sortColumn, SortOrder sortOrder)
         {
