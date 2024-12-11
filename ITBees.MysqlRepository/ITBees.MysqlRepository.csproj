@@ -6,12 +6,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="ITBees.Interfaces" Version="8.0.46" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
   </ItemGroup>
+  
+<!--  <ItemGroup>-->
+<!--    <ProjectReference Include="..\..\ITBees.Interfaces\ITBees.Interfaces\ITBees.Interfaces.csproj" />-->
+<!--    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10"/>-->
+<!--    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0"/>-->
+<!--    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0"/>-->
+<!--    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1"/>-->
+<!--    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2"/>-->
+<!--  </ItemGroup>-->
   
 </Project>
