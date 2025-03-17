@@ -8,8 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ITBees.MysqlRepository
 {
-
-    public class ReadOnlyRepositoryMysql<T, TContext> : MysqlRepositoryBase<T, TContext>, IReadOnlyRepository<T, DbContext> where T : class where TContext : DbContext, new()
+    public class ReadOnlyRepositoryMysql<T, TContext> : MysqlRepositoryBase<T, TContext>,
+        IReadOnlyRepository<T, DbContext>
+        where T : class
+        where TContext : DbContext, new()
     {
         public ReadOnlyRepositoryMysql(DbContextOptions<TContext> options) : base(options)
         {
@@ -34,7 +36,8 @@ namespace ITBees.MysqlRepository
             return AllIncluding(includeProperties).Where(predicate).ToList();
         }
 
-        public PaginatedResult<T> GetDataPaginated(Expression<Func<T, bool>> predicate,
+        public PaginatedResult<T> GetDataPaginated(
+            Expression<Func<T, bool>> predicate,
             int page,
             int elementsPerPage,
             string sortColumn,
@@ -42,9 +45,14 @@ namespace ITBees.MysqlRepository
             params Expression<Func<T, object>>[] includeProperties)
         {
             var query = AllIncluding(includeProperties).Where(predicate);
+
             query = ApplySorting(query, sortColumn, sortOrder);
+
             var allElementsCount = query.Count();
-            var data = query.Skip((page - 1) * elementsPerPage).Take(elementsPerPage).ToList();
+            var data = query
+                .Skip((page - 1) * elementsPerPage)
+                .Take(elementsPerPage)
+                .ToList();
 
             return new PaginatedResult<T>()
             {
@@ -55,40 +63,69 @@ namespace ITBees.MysqlRepository
             };
         }
 
-        public PaginatedResult<T> GetDataPaginated(Expression<Func<T, bool>> predicate, SortOptions sortOptions, params Expression<Func<T, object>>[] includeProperties)
+        public PaginatedResult<T> GetDataPaginated(
+            Expression<Func<T, bool>> predicate,
+            SortOptions sortOptions,
+            params Expression<Func<T, object>>[] includeProperties)
         {
-            return GetDataPaginated(predicate, sortOptions.Page, sortOptions.ElementsPerPage, sortOptions.SortColumn, sortOptions.SortOrder, includeProperties);
+            return GetDataPaginated(
+                predicate,
+                sortOptions.Page,
+                sortOptions.ElementsPerPage,
+                sortOptions.SortColumn,
+                sortOptions.SortOrder,
+                includeProperties);
         }
 
-        private IQueryable<T> ApplySorting(IQueryable<T> query,
-            string sortColumn, SortOrder sortOrder)
+        /// <summary>
+        /// Applies sorting to the given query, supporting nested properties using a dot notation (e.g. "UserAccount.SetupTime").
+        /// </summary>
+        private IQueryable<T> ApplySorting(IQueryable<T> query, string sortColumn, SortOrder sortOrder)
         {
             if (string.IsNullOrWhiteSpace(sortColumn))
             {
+                // If no sort column is provided, just return the query as-is.
                 return query;
             }
 
-            var parameter = Expression.Parameter(typeof(T), "x");
-            var property = typeof(T).GetProperty(sortColumn);
-            if (property == null)
+            try
             {
-                throw new ArgumentException($"Property '{sortColumn}' not found on type '{typeof(T).Name}'");
+                // Create a parameter expression: x =>
+                var parameter = Expression.Parameter(typeof(T), "x");
+                // Build up the property expression for e.g. "UserAccount.SetupTime"
+                // by splitting on '.' and drilling down each property.
+                Expression propertyExpression = parameter;
+
+                // Split by dot to handle nested properties
+                foreach (var member in sortColumn.Split('.'))
+                {
+                    propertyExpression = Expression.PropertyOrField(propertyExpression, member);
+                }
+
+                // Lambda: x => x.UserAccount.SetupTime (for example)
+                var lambda = Expression.Lambda(propertyExpression, parameter);
+
+                // Use "OrderBy" or "OrderByDescending" based on sortOrder
+                string methodName = sortOrder == SortOrder.Descending ? "OrderByDescending" : "OrderBy";
+
+                var resultExpression = Expression.Call(
+                    typeof(Queryable),
+                    methodName,
+                    new Type[] { typeof(T), propertyExpression.Type },
+                    query.Expression,
+                    Expression.Quote(lambda)
+                );
+
+                return query.Provider.CreateQuery<T>(resultExpression);
             }
-
-            var propertyAccess = Expression.MakeMemberAccess(parameter, property);
-            var orderByExpression = Expression.Lambda(propertyAccess, parameter);
-
-            string orderMethod = sortOrder == SortOrder.Descending ? "OrderByDescending" : "OrderBy";
-
-            MethodCallExpression resultExpression = Expression.Call(
-                typeof(Queryable),
-                orderMethod,
-                new Type[] { typeof(T), property.PropertyType },
-                query.Expression,
-                Expression.Quote(orderByExpression)
-            );
-
-            return query.Provider.CreateQuery<T>(resultExpression);
+            catch (ArgumentException ex)
+            {
+                // This is thrown if the property is not found or doesn't exist in the chain
+                throw new ArgumentException(
+                    $"Property '{sortColumn}' is invalid or not found on type '{typeof(T).Name}'. Check nested properties or spelling.",
+                    ex
+                );
+            }
         }
 
         public int GetDataCount(Expression<Func<T, bool>> predicate)
@@ -102,12 +139,12 @@ namespace ITBees.MysqlRepository
             return Context.Set<T>().FromSqlRaw(sql).ToList();
         }
 
-        public IQueryable<T> GetDataQueryable(Expression<Func<T, bool>> predicate,
+        public IQueryable<T> GetDataQueryable(
+            Expression<Func<T, bool>> predicate,
             params Expression<Func<T, object>>[] includeProperties)
         {
             IQueryable<T> query = Context.Set<T>().Where(predicate);
             query = includeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
-
             return query;
         }
 
@@ -138,7 +175,9 @@ namespace ITBees.MysqlRepository
                 i++;
             }
 
-            return Context.Set<T>().FromSqlRaw($"CALL {procedureName} ({parametersReplacement})", procedureArgument).ToList();
+            return Context.Set<T>()
+                .FromSqlRaw($"CALL {procedureName} ({parametersReplacement})", procedureArgument)
+                .ToList();
         }
 
         public ICollection<T2> Sql<T2>(string sql) where T2 : class
