@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ITBees.Interfaces" Version="8.0.59" />
-    <PackageReference Include="ITBees.Models" Version="8.0.83" />
+    <PackageReference Include="ITBees.Interfaces" Version="8.0.61" />
+    <PackageReference Include="ITBees.Models" Version="8.0.85" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
