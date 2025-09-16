@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ITBees.Interfaces" Version="8.0.63" />
+    <PackageReference Include="ITBees.Interfaces" Version="8.0.64" />
     <PackageReference Include="ITBees.Models" Version="8.0.90" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
