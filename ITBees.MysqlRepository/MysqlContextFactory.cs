@@ -17,10 +17,15 @@ namespace ITBees.MysqlRepository
 
             connectionString = args.Length == 0 ? GetConnectionStringWhenDiContainerWasNotInitialized() : args.First();
 
+            // Pinned server version instead of ServerVersion.AutoDetect(...) — AutoDetect opens a
+            // connection on every context creation, which throws (and bubbles up as an unhandled 500)
+            // whenever MySQL is briefly unavailable, e.g. during an automatic package upgrade/restart.
+            var serverVersion = new MySqlServerVersion(new Version(8, 0, 45));
+
 #if DEBUG
-            builderOptions.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), x => x.CommandTimeout(300)).LogTo(Console.WriteLine, LogLevel.Information);
+            builderOptions.UseMySql(connectionString, serverVersion, x => x.CommandTimeout(300).EnableRetryOnFailure(10, TimeSpan.FromSeconds(10), null)).LogTo(Console.WriteLine, LogLevel.Information);
 #else
-                builderOptions.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), x => x.CommandTimeout(300));
+                builderOptions.UseMySql(connectionString, serverVersion, x => x.CommandTimeout(300).EnableRetryOnFailure(10, TimeSpan.FromSeconds(10), null));
 #endif
 
             builderOptions.EnableSensitiveDataLogging(true);
